@@ -56,14 +56,14 @@ user_name = st.text_input("Enter a name for your IP or leave as default:", value
 
 # Chat input
 st.markdown("#### Open Chat")
-chat_input = st.text_input("Type a message:", "")
+chat_input = st.text_input("Type a message:")
 
-# Add new message to chat history if input is provided
-if chat_input:
-    current_time = datetime.datetime.now().strftime("%H:%M")
-    message = f"{user_name} [{current_time}]: {chat_input}"
-    st.session_state["chat_history"].append(message)
-    st.experimental_rerun()  # Refresh the app to show the updated chat
+# Button to submit the chat message
+if st.button("Send Message"):
+    if chat_input:
+        current_time = datetime.datetime.now().strftime("%H:%M")
+        message = f"{user_name} [{current_time}]: {chat_input}"
+        st.session_state["chat_history"].append(message)  # Append to shared chat history
 
 # Display chat messages
 for message in st.session_state["chat_history"]:
@@ -71,5 +71,4 @@ for message in st.session_state["chat_history"]:
 
 # Clear chat history
 if st.button("Clear Chat"):
-    st.session_state["chat_history"].clear()
-    st.experimental_rerun()
+    st.session_state["chat_history"].clear()  # Clear chat history for all users
