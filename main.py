@@ -45,10 +45,6 @@ def get_user_ip():
     ip_address = socket.gethostbyname(hostname)
     return ip_address
 
-# Initialize shared chat history if not already set
-if "chat_history" not in st.session_state:
-    st.session_state["chat_history"] = []
-
 # Display IP address and allow the user to rename it
 user_ip = get_user_ip()
 st.markdown(f"<h1>Linux Terminal Chat - {user_ip}</h1>", unsafe_allow_html=True)
@@ -58,17 +54,54 @@ user_name = st.text_input("Enter a name for your IP or leave as default:", value
 st.markdown("#### Open Chat")
 chat_input = st.text_input("Type a message:")
 
-# Button to submit the chat message
-if st.button("Send Message"):
-    if chat_input:
-        current_time = datetime.datetime.now().strftime("%H:%M")
-        message = f"{user_name} [{current_time}]: {chat_input}"
-        st.session_state["chat_history"].append(message)  # Append to shared chat history
+# Button to send chat message
+if st.button("Send Message") and chat_input:
+    current_time = datetime.datetime.now().strftime("%H:%M")
+    message = f"{user_name} [{current_time}]: {chat_input}"
+    # Send message via Gun.js (JavaScript code below will handle this)
 
-# Display chat messages
-for message in st.session_state["chat_history"]:
-    st.markdown(f"`{message}`")
+# Inject Gun.js and JavaScript code for real-time chat management
+st.markdown(f"""
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.min.js"></script>
+    <script>
+        // Initialize Gun.js
+        const gun = Gun();
 
-# Clear chat history
-if st.button("Clear Chat"):
-    st.session_state["chat_history"].clear()  # Clear chat history for all users
+        // Store the chat data
+        const chat = gun.get("terminal-chat");
+
+        // Display existing messages and listen for new ones
+        chat.map().on((message, id) => {{
+            const chatContainer = document.getElementById("chat-container");
+            if (chatContainer) {{
+                const messageElement = document.createElement("div");
+                messageElement.style.color = "{TEXT_COLOR}";
+                messageElement.style.fontFamily = "{FONT}";
+                messageElement.style.margin = "5px 0";
+                messageElement.textContent = message;
+                chatContainer.appendChild(messageElement);
+                chatContainer.scrollTop = chatContainer.scrollHeight;  // Auto-scroll to the latest message
+            }}
+        }});
+
+        // Send a new message
+        function sendMessage() {{
+            const input = document.getElementById("chat-input");
+            if (input && input.value) {{
+                const timestamp = new Date().toLocaleTimeString();
+                const userMessage = "{user_name}" + " [" + timestamp + "]: " + input.value;
+                chat.set(userMessage);  // Store message in Gun.js
+                input.value = "";  // Clear input field
+            }}
+        }}
+    </script>
+
+    <!-- Chat Display Area -->
+    <div id="chat-container" style="background-color: {BACKGROUND_COLOR}; padding: 10px; border-radius: 5px; height: 300px; overflow-y: auto; border: 1px solid {BUTTON_COLOR};">
+        <!-- Messages will appear here -->
+    </div>
+
+    <!-- Input and Button for Chat -->
+    <input id="chat-input" type="text" placeholder="Type a message..." style="width: 80%; padding: 5px; border-radius: 5px; border: 1px solid {INPUT_BOX_COLOR}; background-color: {INPUT_BOX_COLOR}; color: {TEXT_COLOR}; font-family: {FONT};">
+    <button onclick="sendMessage()" style="padding: 5px 10px; margin-left: 5px; border: none; border-radius: 5px; background-color: {BUTTON_COLOR}; color: white; font-family: {FONT}; cursor: pointer;">Send</button>
+""", unsafe_allow_html=True)
