@@ -2,7 +2,6 @@
 
 import streamlit as st
 import socket
-import datetime
 
 # Constants for styling
 HEADER_COLOR = "#282a36"
@@ -50,16 +49,6 @@ user_ip = get_user_ip()
 st.markdown(f"<h1>Linux Terminal Chat - {user_ip}</h1>", unsafe_allow_html=True)
 user_name = st.text_input("Enter a name for your IP or leave as default:", value=user_ip)
 
-# Chat input
-st.markdown("#### Open Chat")
-chat_input = st.text_input("Type a message:")
-
-# Button to send chat message
-if st.button("Send Message") and chat_input:
-    current_time = datetime.datetime.now().strftime("%H:%M")
-    message = f"{user_name} [{current_time}]: {chat_input}"
-    # Send message via Gun.js (JavaScript code below will handle this)
-
 # Inject Gun.js and JavaScript code for real-time chat management
 st.markdown(f"""
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.min.js"></script>
@@ -67,13 +56,16 @@ st.markdown(f"""
         // Initialize Gun.js
         const gun = Gun();
 
+        // Define user name from Python
+        const userName = "{user_name}";
+
         // Store the chat data
         const chat = gun.get("terminal-chat");
 
         // Display existing messages and listen for new ones
         chat.map().on((message, id) => {{
             const chatContainer = document.getElementById("chat-container");
-            if (chatContainer) {{
+            if (chatContainer && message) {{
                 const messageElement = document.createElement("div");
                 messageElement.style.color = "{TEXT_COLOR}";
                 messageElement.style.fontFamily = "{FONT}";
@@ -89,7 +81,7 @@ st.markdown(f"""
             const input = document.getElementById("chat-input");
             if (input && input.value) {{
                 const timestamp = new Date().toLocaleTimeString();
-                const userMessage = "{user_name}" + " [" + timestamp + "]: " + input.value;
+                const userMessage = userName + " [" + timestamp + "]: " + input.value;
                 chat.set(userMessage);  // Store message in Gun.js
                 input.value = "";  // Clear input field
             }}
