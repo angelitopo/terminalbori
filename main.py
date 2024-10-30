@@ -4,7 +4,7 @@ import streamlit as st
 import socket
 import datetime
 
-# Constants
+# Constants for styling
 HEADER_COLOR = "#282a36"
 BACKGROUND_COLOR = "#1d1f21"
 TEXT_COLOR = "#f8f8f2"
@@ -39,43 +39,37 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Singleton to store chat messages across sessions
-@st.experimental_singleton
-def get_chat_history():
-    return []
-
 # Helper function to get the user's IP address
 def get_user_ip():
     hostname = socket.gethostname()
     ip_address = socket.gethostbyname(hostname)
     return ip_address
 
-# Initialize chat history and IP address
-chat_history = get_chat_history()
+# Initialize shared chat history if not already set
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+
+# Display IP address and allow the user to rename it
 user_ip = get_user_ip()
-
-# Display title and IP address input
 st.markdown(f"<h1>Linux Terminal Chat - {user_ip}</h1>", unsafe_allow_html=True)
-
-# Allow users to rename IP
 user_name = st.text_input("Enter a name for your IP or leave as default:", value=user_ip)
 
-# Chat message input
+# Chat input
 st.markdown("#### Open Chat")
 chat_input = st.text_input("Type a message:", "")
 
-# Add message to shared chat history if input is provided
+# Add new message to chat history if input is provided
 if chat_input:
     current_time = datetime.datetime.now().strftime("%H:%M")
     message = f"{user_name} [{current_time}]: {chat_input}"
-    chat_history.append(message)
-    st.experimental_rerun()  # Rerun app to update chat across all sessions
+    st.session_state["chat_history"].append(message)
+    st.experimental_rerun()  # Refresh the app to show the updated chat
 
-# Display shared chat messages
-for message in chat_history:
+# Display chat messages
+for message in st.session_state["chat_history"]:
     st.markdown(f"`{message}`")
 
-# Option to clear chat history
+# Clear chat history
 if st.button("Clear Chat"):
-    chat_history.clear()  # Clears shared chat history
+    st.session_state["chat_history"].clear()
     st.experimental_rerun()
